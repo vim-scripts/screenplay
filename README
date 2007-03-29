@@ -1,0 +1,48 @@
+This is a mirror of http://www.vim.org/scripts/script.php?script_id=1842
+
+The definition of a well formatted screenplay (as I understand it) goes
+something like:
+
+<15 spaces>SCENE/ACTION/DESCRIPTIONS (max 54 chars before wrapping)
+<37 spaces>CHARACTER NAME
+<25 spaces>DIALOG (max 35 chars before wrapping)
+
+It might look like:
+
+
+             EXT. CITY STREET - DAY
+
+             Rain pissing down. Newspaper KID on street. A man stops
+             to listen.
+
+                                   KID
+                             (shouting)
+                       Extra! Extra! Child labour used to
+                       sell newspapers!
+
+Features
+========
+
+ * All text is just a tab away from being indented correctly.
+   The tab button and the backspace button have been modified to go
+   backwards and forwards in helpful chunks  
+   Action  == 16 spaces == 1 tab
+   Dialog  == 26 spaces == 2 tabs
+   Speaker == 38 spaces == 3 tabs
+
+ * The textwidth (tw) variable switches from 68 to 60, when moving from
+   ACTION to DIALOG. This ensures good margins.
+
+ * Control-p will re-format a paragraph from under the cursor
+   downwards, relative to the (textwidth) margin
+
+ * When you tab three times to type in a character name for DIALOG, and you
+   type the first letter of the characters name and then tab again, then you
+   will be presented with a choice to autocomplete that characters name.
+   (provided you've typed that characters name above a DIALOG at least once
+   before).
+  
+ * Hitting enter after DIALOG should align for a new character name  
+
+ * Hitting enter twice after DIALOG should align for new ACTION block
+
