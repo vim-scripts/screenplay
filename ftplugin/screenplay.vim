@@ -1,60 +1,26 @@
-" Vim plugin to assist in writing well formatted screenplays
-" Last Change:  2007-03-24
-" Maintainer:   Alex Lance, alla at cyber.com.au
+" Vim plugin to assist in writing screenplays compatible with 
+" the trelby plaintext screenplay format.
+"
+" Last Change:  2014-08-20
+" Maintainer:   Alex Lance, vim @ alexlance dot com
 " License:      This file is placed in the public domain.
 "
-"
-" The definition of a well formatted screenplay (as I understand it) goes
-" something like:
-"
-" <15 spaces>SCENE/ACTION/DESCRIPTIONS (max 54 chars before wrapping)
-" <37 spaces>CHARACTER NAME
-" <25 spaces>DIALOG (max 35 chars before wrapping)
-"
-" It might look like:
-"
-"
-"              EXT. CITY STREET - DAY
-"
-"              Rain pissing down. Newspaper KID on street. A MAN stops
-"              to listen.
-"
-"                                    KID
-"                              (shouting)
-"                        Extra! Extra! Child labour used to
-"                        sell newspapers!
 "
 " Features
 " ========
 "
-"  * All text is just a tab away from being indented correctly.
-"    The tab button and the backspace button have been modified to go
+"  * The tab button and the backspace button have been modified to go
 "    backwards and forwards in helpful chunks 
-"    Action  == 16 spaces == 1 tab
-"    Dialog  == 26 spaces == 2 tabs
-"    Speaker == 38 spamce == 3 tabs
 "
-"  * The textwidth (tw) variable switches from 68 to 60, when moving from
-"    ACTION to DIALOG. This ensures good margins.
+"  * Good margins for ACTION and DIALOG
 "
 "  * Control-p will format a paragraph from under the cursor
 "    downwards, relative to the (textwidth) margin
 "
-"  * When you tab three times to type in a character name for DIALOG, and you
-"    type the first letter of the characters name and then tab again, then you
-"    will be presented with a choice to autocomplete that characters name.
-"    (provided you've typed that characters name above a DIALOG at least once
-"    before).
+"  * Tab complete character names
 "  
 "  * Hitting enter after DIALOG should align for a new character name 
 "
-"  * Hitting enter twice after DIALOG should align for new ACTION block
-"       
-" TODO: 
-"  - provide indentation and textwidth settings for ACTOR DIRECTIONS (31
-"    spaces and then ACTOR DIRECTION in brackets)
-"  - make vim style help for this plugin
-"  - syntax highlighting
 "
 " HOW TO INSTALL
 "
@@ -77,7 +43,7 @@ endif
 let loaded_screenplay = 1
 let g:counter = []
 
-" Three listeners: Enter, Tab and Backspace
+" Listen for Enter, Tab and Backspace
 imap <CR> <C-R>=ScreenplayEnterPressed()<CR>
 imap <TAB> <C-R>=ScreenplayTabPressed()<CR>
 imap <BS> <C-R>=ScreenplayBackspacePressed()<CR>
@@ -90,11 +56,17 @@ map <C-P> i<C-R>=ScreenplayCtrlPPressed()<CR>
 " map ctrl-d to clean up all the whitespace so that ctrl-p work correctly
 "imap <C-D> !A!<Esc>:%s/^[ ]\{1,}$//g<CR>?!A!<CR>df!i
 
-set tw=68         " Set text width to 68
+set tw=60         " Set text width
 set expandtab     " Change tabs into spaces
 set softtabstop=0 " softtabstop variable can break my custom backspacing
 set autoindent    " Set auto indent
 set ff=unix       " use unix fileformat
+set fo=tcaw       " set formatoptions to allow nice reflowing of text
+
+" Colours - for dark background
+highlight Pmenu ctermfg=250  ctermbg=238
+highlight PmenuSel ctermfg=white  ctermbg=240
+highlight PmenuSbar ctermfg=black  ctermbg=white
 
 
 function! ScreenplayEnterPressed()
@@ -108,25 +80,24 @@ function! ScreenplayEnterPressed()
   let prev_col = get(g:counter,len)
   call add(g:counter, printf("%d",col))
   let rtn = "\<CR>"
-  set tw=68
+  set tw=60
  
   " Name -> Dialog
-  if col == 38 && !pumvisible()
-    set tw=60
-    let rtn = "\<CR>\<Esc>I".repeat(' ', 25)
+  if col == 23 && !pumvisible()
+    set tw=46
+    let rtn = "\<CR>\<Esc>I".repeat(' ', 10)
 
   " Dialog -> New Name
-  elseif col == 26
-    set tw=60
-    let rtn = "\<CR>\<CR>\<Esc>I".repeat(' ', 37)
+  elseif col == 11
+    set tw=46
+    let rtn = "\<CR>\<CR>\<Esc>I".repeat(' ', 22)
 
   " Dialog -> Action
-  elseif prev_col == 26 && col == 0
-    set tw=68
+  elseif prev_col == 11 && col == 0
+    set tw=60
     let rtn = "\<Esc>I".repeat("\<BS>", 22)
   endif
 
-  "return rtn .prev_col." - ".col
   return rtn 
 endfunction
 
@@ -135,17 +106,20 @@ function! ScreenplayTabPressed()
   let s:x = 4
   let s:extra = ""
   let s:coord = col(".")
-  set tw=68
+  set tw=60
   
-  if s:coord < 16
-    let s:x = 16 - s:coord
-  elseif s:coord < 26
+  if s:coord < 11
     set tw=60
-    let s:x = 26 - s:coord
-  elseif s:coord < 38
-    set tw=60
-    let s:x = 38 - s:coord
-  elseif s:coord >= 38
+    let s:x = 11 - s:coord
+  elseif s:coord < 19
+    set tw=46
+    let s:x = 19 - s:coord
+  elseif s:coord < 23
+    set tw=46
+    let s:x = 23 - s:coord
+  elseif s:coord == 23
+    let s:x = 23 " for CUT TO
+  elseif s:coord > 23 && s:coord < 30
     let s:x = 0
     let s:extra = "\<C-X>\<C-U>"
   endif
@@ -161,12 +135,10 @@ function! ScreenplayBackspacePressed()
   if col == 0
     let s:coord = col(".")
 
-    if s:coord > 38
-      let s:x = s:coord - 38
-    elseif s:coord > 26
-      let s:x = s:coord - 26
-    elseif s:coord > 16
-      let s:x = s:coord - 16
+    if s:coord > 23
+      let s:x = s:coord - 23
+    elseif s:coord > 11
+      let s:x = s:coord - 11
     elseif s:coord == 1
       let s:x = s:coord - 0
     elseif s:coord > 0
@@ -181,11 +153,11 @@ endfunction
 function! ScreenplayCtrlPPressed()
   let [lnum, col] = searchpos('[^ ].*', 'bnc', line("."))
 
-  if col == 26
-    set tw=60
+  if col == 11
+    set tw=46
     return "\<Esc>gq}i"
-  elseif col == 16
-    set tw=68
+  elseif col == 0
+    set tw=60
     return "\<Esc>gq}i"
   endif
   return "\<Esc>gq}i"
@@ -205,7 +177,7 @@ function! ScreenplayCompleteCharacterName(findstart, base)
   else
     let last_line = str2nr(line("$"))
     let line_num = 1
-    let pattern = "^".repeat(" ",37)."[A-Za-z0-9 ']*$"
+    let pattern = "^".repeat(" ",22)."[A-Za-z0-9 ']*$"
     "let pattern = 'combination'
     let matches = {}
     let names = []
